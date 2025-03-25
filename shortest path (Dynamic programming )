@@ -1,0 +1,65 @@
+import itertools
+
+# Distance matrix     # float('inf') rep path that don't exist(It helps maintain clarity and correctness in calculations
+distance_matrix = {
+    1: {1: 0, 2: 12, 3: 10, 4: float('inf'), 5: float('inf'), 6: float('inf'), 7: 12},
+    2: {1: 12, 2: 0, 3: 8, 4: 12, 5: float('inf'), 6: float('inf'), 7: float('inf')},
+    3: {1: 10, 2: 8, 3: 0, 4: 11, 5: 3, 6: float('inf'), 7: 9},
+    4: {1: float('inf'), 2: 12, 3: 11, 4: 0, 5: 11, 6: 10, 7: float('inf')},
+    5: {1: float('inf'), 2: float('inf'), 3: 3, 4: 11, 5: 0, 6: 6, 7: 7},
+    6: {1: float('inf'), 2: float('inf'), 3: float('inf'), 4: 10, 5: 6, 6: 0, 7: 9},
+    7: {1: 12, 2: float('inf'), 3: 9, 4: float('inf'), 5: 7, 6: 9, 7: 0},
+}
+
+def tsp_dynamic_programming(start_city):
+    n = len(distance_matrix)  # Number of cities
+    all_visited = (1 << n) - 1  # All cities visited
+    dp = [[float('inf')] * (n + 1) for _ in range(1 << n)]
+    parent = [[-1] * (n + 1) for _ in range(1 << n)]  # To track the path
+    dp[1 << (start_city - 1)][start_city] = 0  # Starting city
+
+    for mask in range(1 << n):
+        for u in range(1, n + 1):
+            if mask & (1 << (u - 1)) == 0:  # If city u is not visited
+                continue
+            for v in range(1, n + 1):
+                if mask & (1 << (v - 1)) != 0 or u == v:  # If city v is already visited or u == v
+                    continue
+                new_mask = mask | (1 << (v - 1))
+                new_cost = dp[mask][u] + distance_matrix[u][v]
+                if new_cost < dp[new_mask][v]:
+                    dp[new_mask][v] = new_cost
+                    parent[new_mask][v] = u  # Track the parent city
+
+    # Find the minimum cost to return to the starting city
+    min_cost = float('inf')
+    last_city = -1
+    for u in range(1, n + 1):
+        if u == start_city:
+            continue
+        if dp[all_visited][u] + distance_matrix[u][start_city] < min_cost:
+            min_cost = dp[all_visited][u] + distance_matrix[u][start_city]
+            last_city = u
+
+    # Reconstruct the path
+    path = []
+    mask = all_visited
+    current_city = last_city
+
+    while current_city != -1:
+        path.append(current_city)
+        next_city = parent[mask][current_city]
+        mask ^= (1 << (current_city - 1))
+        current_city = next_city
+
+    path.append(start_city)
+    path.reverse()
+
+    return min_cost, path
+
+# Example usage
+start_city = 1
+minimum_distance, path_taken = tsp_dynamic_programming(start_city)
+
+print(f"The minimum distance is: {minimum_distance}")
+print(f"The path taken is: {' -> '.join(map(str, path_taken))}")
