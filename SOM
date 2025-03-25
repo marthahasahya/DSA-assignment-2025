@@ -1,0 +1,76 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Define city coordinates based on the provided values
+cities = np.array([
+    [-0.69400053, 0.81774317],  # City 1
+    [0.29300349, 1.0],           # City 2
+    [-0.11101155, 0.37160604],   # City 3
+    [-0.55208996, -0.26711398],  # City 7
+    [0.56954402, -0.04879591],   # City 4
+    [-0.0625545, -0.88908257],   # City 5
+    [0.55710903, -0.98435676]     # City 6
+])
+
+# Initialize SOM parameters
+num_cities = len(cities)
+weights = np.copy(cities)  # Initialize weights with city coordinates
+alpha = 0.5  # Initial learning rate
+sigma = 0.5  # Initial neighborhood radius
+max_iter = 100  # Number of iterations
+decay_rate = 0.99  # Decay rate for learning rate and sigma
+
+# Training loop
+for iteration in range(max_iter):
+    for city in cities:
+        # Step 2: Find the Best Matching Unit (BMU)
+        distances = np.linalg.norm(weights - city, axis=1)
+        bmu_index = np.argmin(distances)
+
+        # Step 3: Update weights of BMU and neighbors
+        for i in range(num_cities):
+            distance_to_bmu = np.linalg.norm(weights[i] - weights[bmu_index])
+            if distance_to_bmu < sigma:
+                # Update weight
+                weights[i] += alpha * (city - weights[i]) * np.exp(-distance_to_bmu**2 / (2 * (sigma**2)))
+
+    # Step 4: Decay learning rate and neighborhood radius
+    alpha *= decay_rate
+    sigma *= decay_rate
+
+# Extract route based on final weights
+final_route_indices = [0]  # Start with City 1
+remaining_indices = list(range(1, num_cities))  # Indices of other cities
+
+# Create a route visiting all cities
+while remaining_indices:
+    last_city_index = final_route_indices[-1]
+    # Find the nearest city from the last visited city
+    distances = np.linalg.norm(weights[last_city_index] - weights[remaining_indices], axis=1)
+    next_index = remaining_indices[np.argmin(distances)]
+    final_route_indices.append(next_index)
+    remaining_indices.remove(next_index)
+
+# Ensure the route returns to the starting city for a complete tour
+final_route_indices.append(0)  # Return to City 1
+
+final_route = weights[final_route_indices]
+
+# Calculate total distance of the route
+total_distance = np.sum(np.linalg.norm(final_route - np.roll(final_route, -1, axis=0), axis=1))
+
+# Print results
+print(f"The final route is: {[index + 1 for index in final_route_indices]}")  # Adding 1 to match city numbering
+print(f"The total distance is: {total_distance}")
+
+# Plotting the results
+plt.figure(figsize=(10, 6))
+plt.scatter(cities[:, 0], cities[:, 1], color='blue', label='Cities')
+plt.scatter(weights[:, 0], weights[:, 1], color='red', label='SOM Neurons')
+plt.plot(final_route[:, 0], final_route[:, 1], color='green', linestyle='--', label='Final Route')
+plt.title('Self-Organizing Map for TSP Starting from City 1')
+plt.xlabel('X Coordinate')
+plt.ylabel('Y Coordinate')
+plt.legend()
+plt.grid()
+plt.show()
