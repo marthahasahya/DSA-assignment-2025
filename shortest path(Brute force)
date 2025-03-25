@@ -1,0 +1,67 @@
+import itertools  # Importing itertools for generating permutations
+
+# Distance matrix representing the distances between cities
+distance_matrix = {
+    1: {1: 0, 2: 12, 3: 10, 7: 12},
+    2: {1: 12, 2: 0, 3: 8, 4: 12},
+    3: {1: 10, 2: 8, 3: 0, 4: 11, 5: 3, 7: 9},
+    4: {2: 12, 3: 11, 4: 0, 5: 11, 6: 10},
+    5: {3: 3, 4: 11, 5: 0, 6: 6, 7: 7},
+    6: {4: 10, 5: 6, 6: 0, 7: 9},
+    7: {1: 12, 3: 9, 5: 7, 6: 9, 7: 0},
+}
+
+
+def calculate_total_distance(route):
+    """Calculate the total distance of the given route.
+
+    Args:
+        route (list): A list of cities representing the order of visitation.
+
+    Returns:
+        total_distance (float): The total distance of the route.
+    """
+    total_distance = 0  # Initialize total distance to zero
+    for i in range(len(route) - 1):
+        # Sum the distances between consecutive cities in the route
+        total_distance += distance_matrix[route[i]].get(route[i + 1], float('inf'))
+
+    # Return to the starting city (closing the loop)
+    total_distance += distance_matrix[route[-1]].get(route[0], float('inf'))
+    return total_distance
+
+
+def find_shortest_route(start_city):
+    """Find the shortest route using a brute-force approach.
+
+    Args:
+        start_city (int): The city from which the route starts.
+
+    Returns:
+        best_route (list): The best route found.
+        shortest_distance (float): The minimum distance of the best route.
+    """
+    cities = list(distance_matrix.keys())  # Extract all cities
+    cities.remove(start_city)  # Remove the starting city from the list
+    shortest_distance = float('inf')  # Initialize shortest distance to infinity
+    best_route = []  # Variable to store the best route found
+
+    # Generate all permutations of the remaining cities (state space)
+    for perm in itertools.permutations(cities):
+        route = [start_city] + list(perm)  # Create a complete route starting and ending at start_city
+        total_distance = calculate_total_distance(route)  # Calculate the distance for the current route
+
+        # If the current route is shorter than the previously found shortest distance
+        if total_distance < shortest_distance:
+            shortest_distance = total_distance  # Update the shortest distance
+            best_route = route  # Update the best route
+
+    return best_route, shortest_distance  # Return the best route and its distance
+
+
+# Example usage
+start_city = 1
+best_route, shortest_distance = find_shortest_route(start_city)
+
+print(f"The shortest route is: {best_route}")
+print(f"The minimum distance is: {shortest_distance}")
