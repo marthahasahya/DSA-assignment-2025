@@ -1,0 +1,41 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import networkx as nx
+
+# Define the distance matrix
+distance_matrix = {
+    1: {1: 0, 2: 12, 3: 10, 7: 12},
+    2: {1: 12, 2: 0, 3: 8, 4: 12},
+    3: {1: 10, 2: 8, 3: 0, 4: 11, 5: 3, 7: 9},
+    4: {2: 12, 3: 11, 4: 0, 5: 11, 6: 10},
+    5: {3: 3, 4: 11, 5: 0, 6: 6, 7: 7},
+    6: {4: 10, 5: 6, 6: 0, 7: 9},
+    7: {1: 12, 3: 9, 5: 7, 6: 9, 7: 0},
+}
+
+# Create a graph from the distance matrix
+G = nx.Graph()
+
+for city, distances in distance_matrix.items():
+    for target_city, distance in distances.items():
+        if city != target_city:  # Avoid self-loops
+            G.add_edge(city, target_city, weight=distance)
+
+# Set a random seed for reproducibility
+np.random.seed(42)
+
+# Use spring layout to get coordinates
+pos = nx.spring_layout(G, weight='weight', iterations=50)
+
+# Print the coordinates
+for city, coord in pos.items():
+    print(f"City {city}: {coord}")
+
+# Plotting the coordinates
+plt.figure(figsize=(8, 6))
+nx.draw(G, pos, with_labels=True, node_size=700, node_color='lightblue', font_size=10, font_weight='bold')
+plt.title('City Coordinates from Distance Matrix (Spring Layout)')
+plt.xlabel('X Coordinate')
+plt.ylabel('Y Coordinate')
+plt.grid()
+plt.show()
